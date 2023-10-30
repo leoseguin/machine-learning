@@ -1,6 +1,6 @@
-# Machine learning mini-Project (pr. C. Cerisara) : French-English translation
+# Machine learning mini-project : French-English translation
 
-Report by **Léo Seguin**: [GitHub Profile](https://github.com/leoseguin)
+Report by **[Léo Seguin](https://github.com/leoseguin)**
 
 ## Introduction
 
