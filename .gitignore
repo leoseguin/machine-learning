@@ -6,3 +6,5 @@ dataset/europarl-v7.fr-en.fr
 dataset/fr-en.tgz
 dataset/french.pkl
 dataset/french_vocab.pkl
+dataset/english_prepared.pkl
+dataset/french_prepared.pkl
