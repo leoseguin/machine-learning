@@ -10,6 +10,8 @@ import requests
 import tarfile
 import os
 
+### This program downloads the dataset from the web, then prepares the data for learning, and saves it to the computer under "dataset/french_prepared.pkl" and "dataset/english_prepared.pkl". It needs an internet connection to run properly, but it has to be run only once.
+
 # load doc into memory
 def load_doc(filename):
     # open the file as read only
@@ -110,19 +112,24 @@ def update_dataset(lines, vocab):
 	return new_lines
 
 def clean_dataset(dir):
+	
+	## Split the files into sentences
+
     # load English data
     filename = os.path.join(dir, 'europarl-v7.fr-en.en')
     doc = load_doc(filename)
     sentences = to_sentences(doc)
     minlen, maxlen = sentence_lengths(sentences)
     print('English data: sentences=%d, min=%d, max=%d' % (len(sentences), minlen, maxlen))
-
+	
     # load French data
     filename = os.path.join(dir, 'europarl-v7.fr-en.fr')
     doc = load_doc(filename)
     sentences = to_sentences(doc)
     minlen, maxlen = sentence_lengths(sentences)
     print('French data: sentences=%d, min=%d, max=%d' % (len(sentences), minlen, maxlen))
+
+    ## Normalize and clean files
 
     # load English data
     filename = os.path.join(dir, 'europarl-v7.fr-en.en')
@@ -136,7 +143,7 @@ def clean_dataset(dir):
     for i in range(10):
         print(sentences[i])
     """
-
+	
     # load French data
     filename = os.path.join(dir, 'europarl-v7.fr-en.fr')
     doc = load_doc(filename)
@@ -150,6 +157,8 @@ def clean_dataset(dir):
         print(sentences[i])
 	"""
 
+    ## Reduce vocabulary
+
     # load English dataset
     filename = os.path.join(dir, 'english.pkl')
     lines = load_clean_sentences(filename)
@@ -162,11 +171,13 @@ def clean_dataset(dir):
     # mark out of vocabulary words
     lines = update_dataset(lines, vocab)
     # save updated dataset
-    filename = os.path.join(dir, 'english_vocab.pkl')
+    filename = os.path.join(dir, 'english_prepared.pkl')
     save_clean_sentences(lines, filename)
-    # spot check
-    #for i in range(10):
-    #    print(lines[i])
+    """
+	# spot check
+    for i in range(10):
+        print(lines[i])
+	"""
 
     # load French dataset
     filename = os.path.join(dir, 'french.pkl')
@@ -180,11 +191,13 @@ def clean_dataset(dir):
     # mark out of vocabulary words
     lines = update_dataset(lines, vocab)
     # save updated dataset
-    filename = os.path.join(dir, 'french_vocab.pkl')
+    filename = os.path.join(dir, 'french_prepared.pkl')
     save_clean_sentences(lines, filename)
-    # spot check
-    #for i in range(10):
-    #    print(lines[i])
+    """
+	# spot check
+    for i in range(10):
+        print(lines[i])
+	"""
 
 download_dir = 'dataset'
 os.makedirs(download_dir, exist_ok=True)
@@ -207,7 +220,6 @@ if response.status_code == 200:
     print(f"Unzipped {filename}\n")
 
     # Clean the dataset
-    clean_dataset_script = os.path.join(download_dir, 'clean-dataset.py')
     print("Dataset cleaning...")
     clean_dataset(download_dir)
     print("Dataset cleaned\n")
