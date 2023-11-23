@@ -10,7 +10,7 @@ import requests
 import tarfile
 import os
 
-### This program downloads the dataset from the web, then prepares the data for learning, and saves it to the computer under "dataset/french_prepared.pkl" and "dataset/english_prepared.pkl". It needs an internet connection to run properly, but it has to be run only once.
+### This program downloads the dataset from the web, then prepares the data for learning, and saves it to the computer under dataset/french_prepared.pkl and dataset/english_prepared.pkl. It needs an internet connection to run properly and can take time to process, but it has to be run only once.
 
 # load doc into memory
 def load_doc(filename):
