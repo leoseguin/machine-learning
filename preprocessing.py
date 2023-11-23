@@ -63,7 +63,7 @@ def buildVocab(data, french=True):
     Build and return a vocabulary (dictionary of distinct tokens) based on a list of sentences in a given language (French if french=True, else English)
     """
     vocabulary = {'pad':0, 'unk':1}      # 'pad' and 'unk' being special tokens, we put it at the beginning of our vocabulary. 'pad' refers to the padding added at the end of sentences while 'unk' refers to the words that were removed from the vocabulary.
-    index = 1
+    index = 2
     for sentence in data:
         for token in tokenize(sentence, french):
             if not token in vocabulary:     # add the new token in the vocabulary

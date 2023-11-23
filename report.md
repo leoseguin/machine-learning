@@ -1,6 +1,6 @@
 # Machine learning mini-project : French-English translation
 
-Report by **[Léo Seguin](https://github.com/leoseguin)**
+*Report by **[Léo Seguin](https://github.com/leoseguin)***
 
 ## Introduction
 
@@ -16,7 +16,7 @@ This report discusses the methodology used for the project, including the datase
 
 *Note: for this chapter, we took our main inspiration from [this website](https://machinelearningmastery.com/prepare-french-english-dataset-machine-translation/).*
 
-The dataset used in the project is taken from the public *Europarl* dataset. It is the contraction of *European Parliament*, as it contains a collection of transcriptions of speakers at the European Parliament, between 1996 and 2011. Those transcriptions are translated in the 11 official languages of the EU.
+The data used in the project is taken from the public *Europarl* dataset. It is the contraction of *European Parliament*, as it contains a collection of transcriptions of speakers at the European Parliament, between 1996 and 2011. Those transcriptions are translated in the 11 official languages of the EU.
 
 In this project, we focus only on the French and English transcriptions. 
 They are stored in two parallel datasets, `europarl-v7.fr-en.fr` and `europarl-v7.fr-en.en`. They contain the same **2,007,723 sentences**, respectively in their French and English versions. The French dataset contains 51,388,643 words (of which 141,642 are distinct), while the English datasets contains 50,196,035 of them (of which 105,357 are distinct).
@@ -37,7 +37,8 @@ We follow another series of steps in order to put the data in a format suitable 
 - Remove the top 1% longest sentences, in order to reduce the maximum sentence length from 642 tokens to 75 (which will greatly improve further computation time)
 - Add padding tokens at the end of remaining sentences so that all of them have the same length
 - Save the vocabularies and the modified datasets in new pickle files
-The vocabularies are saved under `french_vocab.pkl` and `english_vocab.pkl`, they contain respectively **58,802 French tokens** and **41,722 English tokens**. The prepared data is stored in the two parallel datasets `french_num.pkl` and `english_num.pkl`, each one containing **1,984,702 lists of 75 numbers each** ready for machine learning application.
+
+The vocabularies are saved under `french_vocab.pkl` and `english_vocab.pkl`; they contain respectively **58,802 French tokens** and **41,722 English tokens**. The prepared data is stored in the two parallel datasets `french_num.pkl` and `english_num.pkl`, each one containing **1,984,702 lists of 75 numbers each**, ready for machine learning application.
 
 The program [`preprocessing.py`](preprocessing.py) applies the preprocessing steps mentioned above, and saves the resulting files in the `dataset` folder.
 
