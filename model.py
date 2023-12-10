@@ -43,14 +43,14 @@ test_sequences = (french_sequences[train_size + val_size:], english_sequences[tr
 
 ## Make batches
 
-def make_batch(sequences):
+def make_batches(sequences):
     french_seqs, english_seqs = sequences
     input_batch, output_batch, target_batch = [], [], []
 
     for i in range(len(french_seqs)):
         input = french_seqs[i]
-        output = english_seqs[i]
-        target = english_seqs[i]
+        output = [2] + english_seqs[i]    # add start token
+        target = english_seqs[i] + [3]    # add end token
 
         input_batch.append(np.eye(len(french_vocab))[input])
         output_batch.append(np.eye(len(english_vocab))[output])
@@ -58,9 +58,9 @@ def make_batch(sequences):
 
     return torch.tensor(input_batch, dtype=torch.long, device=device), torch.tensor(output_batch, dtype=torch.long, device=device), torch.tensor(target_batch, dtype=torch.long, device=device)
 
-train_batches = make_batch(train_sequences)
-val_batches = make_batch(val_sequences)
-test_batches = make_batch(test_sequences)
+train_batches = make_batches(train_sequences)
+val_batches = make_batches(val_sequences)
+test_batches = make_batches(test_sequences)
 
 ## Define DataLoaders and training parameters
 """

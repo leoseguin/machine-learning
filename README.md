@@ -42,7 +42,7 @@ We follow another series of steps in order to put the data in a format suitable 
 - Add padding tokens at the end of sentences so that all of them have the same length
 - Save the vocabularies and the modified datasets in new pickle files
 
-The vocabularies are saved under `french_vocab.pkl` and `english_vocab.pkl`; they contain respectively **12,001 French tokens** and **9,023 English tokens**. The prepared data is stored in the two parallel datasets `french_num.pkl` and `english_num.pkl`, each one containing **9,567 lists of 27 numbers each**, ready for machine learning application.
+The vocabularies are saved under `french_vocab.pkl` and `english_vocab.pkl`; they contain respectively **12,003 French tokens** and **9,025 English tokens**. The prepared data is stored in the two parallel datasets `french_num.pkl` and `english_num.pkl`, each one containing **9,567 lists of 27 numbers each**, ready for machine learning application.
 
 For instance, the sentence `"we support free choice for all consumers across the eu"` is now encoded as `[7, 76, 1230, 472, 77, 192, 155, 1537, 16, 302, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]` in the file `english_num.pkl`.
 
@@ -73,8 +73,7 @@ The program [`model.py`](model.py) creates the model and trains it on the data c
 wip
 
 ## TODO : 
-1. add start and end tokens
-2. implement dataloaders
-3. add evaluation on the validation set inside training loop
-4. try and optimise hyperparameters
-5. save the model when ready, for testing on test set then translation usage
+1. implement dataloaders
+2. add evaluation on the validation set inside training loop
+3. try and optimise hyperparameters
+4. save the model when ready, for testing on test set then translation usage
