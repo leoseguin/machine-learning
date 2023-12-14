@@ -36,10 +36,10 @@ print(english_data[i])
 
 ## Tokenize sentences
 
-# python -m spacy download fr_core_news_sm
+# !python -m spacy download fr_core_news_sm
 fr = spacy.load("fr_core_news_sm") # load the French model to tokenize French text
 
-# python -m spacy download en_core_web_sm
+# !python -m spacy download en_core_web_sm
 eng = spacy.load("en_core_web_sm") # load the English model to tokenize English text
 
 def tokenize(data, french=True):
@@ -61,7 +61,7 @@ print(f"\nLowest sentence length: {min_length}")
 max_length = max( max([len(sentence) for sentence in french_token]), max([len(sentence) for sentence in english_token]) )  # length of the longest sentence in both datasets
 print(f"Highest sentence length: {max_length}")
 
-percentile_low = 10
+percentile_low = 5
 fr_percentile_low = int(np.percentile([len(sentence) for sentence in french_token], percentile_low))
 en_percentile_low = int(np.percentile([len(sentence) for sentence in english_token], percentile_low))
 min_length = min(fr_percentile_low, en_percentile_low)
@@ -101,7 +101,7 @@ def reduceDataset(data, p):
     indices_to_keep = random.sample(range(len(data)), len(data) - num_to_remove)
     return [data[i] for i in indices_to_keep]
 
-percent_to_remove = 99
+percent_to_remove = 99.5
 french_token, english_token = reduceDataset(french_token, percent_to_remove), reduceDataset(english_token, percent_to_remove)
 
 print(f"\n{percent_to_remove}% additional sentences randomly removed. {len(french_token)} remaining sentences.")
@@ -112,7 +112,7 @@ def buildVocab(data):
     """
     Build and return a vocabulary (dictionary of distinct tokens) based on a list of sentences in a given language (French if french=True, else English)
     """
-    vocabulary = {'pad':0, 'unk':1, 'srt':2, 'edn':3}      # 'pad', 'unk', 'srt' and 'edn' being special tokens, we put them at the beginning of our vocabulary. 'pad' refers to the padding added at the end of sentences while 'unk' refers to the words that were removed from the vocabulary. 'srt' and 'edn' are respectively the start and end tokens (not written 'start' and 'end' because it may confuse with the english words)
+    vocabulary = {'pad':0, 'unk':1, 'sos':2, 'eos':3}      # 'pad', 'unk', 'sos' and 'eos' being special tokens, we put them at the beginning of our vocabulary. 'pad' refers to the padding added at the end of sentences while 'unk' refers to the words that were removed from the vocabulary. 'sos' and 'eos' are respectively the start of sentence and end of sentence tokens.
     index = 4
     for sentence in data:
         for token in sentence:
@@ -156,25 +156,27 @@ def numericalize(data, vocab):
     """
     Replace each token by its index within a list of sentences in a given language (French if french=True, else English)
     """
-    new_data = [[] for _ in range(len(data))]
+    new_data = [[2] for _ in range(len(data))]  # every sequence begins with 'sos' token
     for n in range(len(data)):
         for token in data[n]:
             new_data[n].append(vocab[token])
+        new_data[n].append(3)   # every sequence ends with 'eos' token
     return new_data
 
 french_data_num = numericalize(french_token, french_vocab)
 english_data_num = numericalize(english_token, english_vocab)
+max_length += 2    # take sos and eos into account
 
 print("\nSentences succesfully numericalized. Same example:")
 
 print(french_data_num[i])
 print(english_data_num[i])
 
-## Apply padding
+## Add padding
 
 def applyPadding(fr_data, en_data, max_len):
     """
-    Add padding tokens at the end of the sentences in both datasets so that all of them have the same length
+    Add padding tokens at the end of the sequences in both datasets so that all of them have the same length
     """
     assert len(fr_data) == len(en_data)
     for n in range(len(fr_data)):
@@ -186,7 +188,7 @@ def applyPadding(fr_data, en_data, max_len):
 
 french_data_num, english_data_num = applyPadding(french_data_num, english_data_num, max_length)
 
-print(f"\nPadding added to all sentences with less than {max_length} words. Same example:")
+print(f"\nPadding added to all sequences with less than {max_length} tokens. Same example:")
 
 print(french_data_num[i])
 print(english_data_num[i])

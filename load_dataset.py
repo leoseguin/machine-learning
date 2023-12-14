@@ -166,7 +166,7 @@ def clean_dataset(dir):
     vocab = to_vocab(lines)
     print('English Vocabulary: %d' % len(vocab))
     # reduce vocabulary
-    vocab = trim_vocab(vocab, 50)
+    vocab = trim_vocab(vocab, 20)
     print('New English Vocabulary: %d' % len(vocab))
     # mark out of vocabulary words
     lines = update_dataset(lines, vocab)
@@ -186,7 +186,7 @@ def clean_dataset(dir):
     vocab = to_vocab(lines)
     print('French Vocabulary: %d' % len(vocab))
     # reduce vocabulary
-    vocab = trim_vocab(vocab, 50)
+    vocab = trim_vocab(vocab, 20)
     print('New French Vocabulary: %d' % len(vocab))
     # mark out of vocabulary words
     lines = update_dataset(lines, vocab)

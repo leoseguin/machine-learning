@@ -24,8 +24,8 @@ The data used in the project is taken from the public *Europarl* dataset. It is 
 In this project, we focus only on the French and English transcriptions. 
 They are stored in two parallel datasets, `europarl-v7.fr-en.fr` and `europarl-v7.fr-en.en`. They contain the same **2,007,723 sentences**, respectively in their French and English versions. The French dataset contains 51,388,643 words (of which 141,642 are distinct), while the English datasets contains 50,196,035 of them (of which 105,357 are distinct).
 
-We follow different steps in order to prepare the data for a more efficient learning, notably: splitting the file into sentences, tokenizing text by white space, normalizing case to lowercase, removing punctuation from each word, removing non-printable characters, converting French characters to Latin characters, removing words that contain non-alphabetic characters, and reducing vocabulary (infrequent words are replaced by "unk" in the final dataset). 
-The prepared data is stored in the two parallel datasets `french_prepared.pkl` and `english_prepared.pkl`. They still contain the same 2,007,723 sentences; however, only **21,714 distinct French words** and **15,763 distinct English words** are kept.
+We follow different steps in order to prepare the data for a more efficient learning, notably: splitting the file into sentences, tokenizing text by white space, normalizing case to lowercase, removing punctuation from each word, removing non-printable characters, converting French characters to Latin characters, removing words that contain non-alphabetic characters, and reducing vocabulary (most infrequent words are replaced by "unk" in the final dataset). 
+The prepared data is stored in the two parallel datasets `french_prepared.pkl` and `english_prepared.pkl`. They still contain the same 2,007,723 sentences; however, only **32,871 distinct French words** and **23,340 distinct English words** are kept.
 
 The program [`load_dataset.py`](load_dataset.py) downloads the dataset from the web, applies the cleaning steps mentioned above, and saves the resulting files in the `dataset` folder.
 
@@ -35,22 +35,22 @@ The program [`load_dataset.py`](load_dataset.py) downloads the dataset from the 
 
 We follow another series of steps in order to put the data in a format suitable for learning, i.e. lists of numbers of equal length, and significantly improve performance. The steps are the following:
 - Tokenize sentences
-- Remove the 10% shortest (resp. 40% longest) sentences, in order to increase (resp. decrease) the minimum (resp. maximum) sentence length from 0 token to 9 (resp. from 642 tokens to 27)
-- Randomly remove 99% of the remaining sentences
+- Remove the 5% shortest (resp. 40% longest) sentences, in order to increase the minimum sentence length from 0 token to 6 (resp. decrease the maximum from 642 tokens to 27)
+- Randomly remove 99.5% of the remaining sentences
 - Build a vocabulary for each language
-- Replace each token by its index in the sentences from the dataset
-- Add padding tokens at the end of sentences so that all of them have the same length
+- For each sentence in the dataset, add start-of-sentence and end-of-sentence tokens and replace every token by its index in the corresponding vocabulary
+- Add padding tokens at the end of sequences so that all of them have the same length
 - Save the vocabularies and the modified datasets in new pickle files
 
-The vocabularies are saved under `french_vocab.pkl` and `english_vocab.pkl`; they contain respectively **12,003 French tokens** and **9,025 English tokens**. The prepared data is stored in the two parallel datasets `french_num.pkl` and `english_num.pkl`, each one containing **9,567 lists of 27 numbers each**, ready for machine learning application.
+The vocabularies are saved under `french_vocab.pkl` and `english_vocab.pkl`; they contain respectively **9,857 French tokens** and **7,494 English tokens**. The prepared data is stored in the two parallel datasets `french_num.pkl` and `english_num.pkl`, each one containing **5,419 lists of 29 integers each**, ready for machine learning application.
 
-For instance, the sentence `"we support free choice for all consumers across the eu"` is now encoded as `[7, 76, 1230, 472, 77, 192, 155, 1537, 16, 302, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]` in the file `english_num.pkl`.
+For instance, the sentence `"we support free choice for all consumers across the eu"` is now encoded as `[2, 7, 76, 1230, 472, 77, 192, 155, 1537, 16, 302, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]` in the file `english_num.pkl`.
 
 The program [`preprocessing.py`](preprocessing.py) applies the preprocessing steps mentioned above, and saves the resulting files in the `dataset` folder.
 
 ## Model architecture
 
-*Note: for this chapter, we took our main inspiration (and some code snippets) from [this website](https://cnvrg.io/seq2seq-model/).*
+*Note: for this chapter, we took our main inspiration (and some code snippets) from the three following websites [[1]](https://cnvrg.io/seq2seq-model/), [[2]](https://ethen8181.github.io/machine-learning/deep_learning/seq2seq/1_torch_seq2seq_intro.html#Encoder-Module), [[3]](https://towardsdatascience.com/a-comprehensive-guide-to-neural-machine-translation-using-seq2sequence-modelling-using-pytorch-41c9b84ba350#6756).*
 
 We choose to use a **Seq2Seq (Sequence to Sequence)** architecture with **LSTM (Long Short-Term Memory)**.
 - Seq2Seq models are particularly adept at language translation tasks and are widely used in this domain.
@@ -72,8 +72,9 @@ The program [`model.py`](model.py) creates the model and trains it on the data c
 
 wip
 
-## TODO : 
-1. implement dataloaders
-2. add evaluation on the validation set inside training loop
+## TODO :
+1. add evaluation on the validation set inside training loop
+2. plot losses and maybe other interesting stuff
 3. try and optimise hyperparameters
-4. save the model when ready, for testing on test set then translation usage
+4. save the model when ready and compute loss on test set
+5. try some translation usages (compare with Google Translate and/or DeepL)
