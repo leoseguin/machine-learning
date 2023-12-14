@@ -8,6 +8,7 @@ import pickle
 import random
 
 import time
+import matplotlib.pyplot as plt
 
 directory = "dataset"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -107,9 +108,27 @@ class Seq2SeqLSTM(nn.Module):
 
 ## Train and evaluate model
 
+def evaluate(mod):
+    mod.train(False)
+
+    tot_loss = 0
+    with torch.no_grad():
+        for batch in val_loader:
+            # turn off teacher forcing
+            outputs = mod(batch[0], batch[1], tfr=0) 
+            outputs_flatten = outputs[1:].view(-1, outputs.shape[-1])
+            trg_flatten = batch[1][1:].view(-1)
+
+            loss = crit(outputs_flatten, trg_flatten)
+            tot_loss += loss.item()
+
+    return tot_loss / len(val_loader)
+
 def train(mod):
     optim = torch.optim.Adam(mod.parameters(), lr=learning_rate)
     
+    train_losses = []
+    val_losses = []
     for epoch in range(n_epochs):  
         print(f"\nEpoch {epoch + 1}/{n_epochs}")
         start_time = time.time()
@@ -130,10 +149,28 @@ def train(mod):
 
             optim.step()
         
+        train_loss = epoch_loss / len(train_loader)
         print(f"Train Loss: {(epoch_loss / len(train_loader)):.4f}")
+
+        val_loss = evaluate(mod)
+        print(f"Validation Loss: {val_loss:.4f}")
         
         end_time = time.time()
         print(f"Time: {(end_time-start_time):.2f}s")
+
+        train_losses.append(train_loss)
+        val_losses.append(val_loss)
+
+    plt.figure(1, figsize=(10,5))
+
+    plt.plot(list(range(1, n_epochs+1)), train_losses, 'r', label="train")
+    plt.plot(list(range(1, n_epochs+1)), val_losses, 'b', label="val")
+
+    plt.ylabel("Cross-entropy loss")
+    plt.xlabel("Epoch")
+    plt.legend(loc="upper left")
+
+    plt.show()
 
 ## main
 
