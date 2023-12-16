@@ -53,18 +53,13 @@ test_sequences = (torch.tensor(french_sequences[train_size + val_size:], dtype=t
 embed_size = 256
 hidden_size = 512
 learning_rate = 0.001
-n_epochs = 10
+n_epochs = 20
 batch_size = 64
 
 # custom datasets
 train_dataset = TensorDataset(train_sequences[0], train_sequences[1])
 val_dataset = TensorDataset(val_sequences[0], val_sequences[1])
 test_dataset = TensorDataset(test_sequences[0], test_sequences[1])
-
-# dataloaders
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=batch_size)
-test_loader = DataLoader(test_dataset, batch_size=batch_size)
 
 # criterion
 pad_idx = english_vocab['pad']
@@ -87,7 +82,6 @@ class Seq2SeqLSTM(nn.Module):
         self.linear = nn.Linear(hid_size, out_size)
 
     def forward(self, source, target, tfr=0.5):
-
         max_len, batch_size = target.shape
         outputs = torch.zeros(max_len, batch_size, self.output_size).to(device)
 
@@ -108,29 +102,35 @@ class Seq2SeqLSTM(nn.Module):
 
 ## Train and evaluate model
 
-def evaluate(mod):
+def evaluate(mod, loader):
     mod.train(False)
 
     tot_loss = 0
     with torch.no_grad():
-        for batch in val_loader:
+        for batch in loader:
             # turn off teacher forcing
-            outputs = mod(batch[0], batch[1], tfr=0) 
+            outputs = mod(batch[0], batch[1], tfr=0)
             outputs_flatten = outputs[1:].view(-1, outputs.shape[-1])
             trg_flatten = batch[1][1:].view(-1)
 
             loss = crit(outputs_flatten, trg_flatten)
             tot_loss += loss.item()
 
-    return tot_loss / len(val_loader)
+    return tot_loss / len(loader)
 
-def train(mod):
-    optim = torch.optim.Adam(mod.parameters(), lr=learning_rate)
-    
+def train(mod, lr, nep, bs):
+    # dataloaders
+    train_loader = DataLoader(train_dataset, batch_size=bs, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=bs)
+
+    # optimizer
+    optim = torch.optim.Adam(mod.parameters(), lr=lr)
+
     train_losses = []
     val_losses = []
-    for epoch in range(n_epochs):  
-        print(f"\nEpoch {epoch + 1}/{n_epochs}")
+    best_val_loss = float('inf')
+    for epoch in range(nep):
+        print(f"\nEpoch {epoch + 1}/{nep}")
         start_time = time.time()
 
         mod.train(True)
@@ -148,32 +148,69 @@ def train(mod):
             loss.backward()
 
             optim.step()
-        
-        train_loss = epoch_loss / len(train_loader)
-        print(f"Train Loss: {(epoch_loss / len(train_loader)):.4f}")
 
-        val_loss = evaluate(mod)
+        train_loss = epoch_loss / len(train_loader)
+        print(f"Train Loss: {train_loss:.4f}")
+
+        val_loss = evaluate(mod, val_loader)
         print(f"Validation Loss: {val_loss:.4f}")
-        
+
         end_time = time.time()
         print(f"Time: {(end_time-start_time):.2f}s")
 
         train_losses.append(train_loss)
         val_losses.append(val_loss)
 
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+    """
     plt.figure(1, figsize=(10,5))
 
-    plt.plot(list(range(1, n_epochs+1)), train_losses, 'r', label="train")
-    plt.plot(list(range(1, n_epochs+1)), val_losses, 'b', label="val")
+    plt.plot(list(range(1, nep+1)), train_losses, 'r', label="train")
+    plt.plot(list(range(1, nep+1)), val_losses, 'b', label="val")
 
     plt.ylabel("Cross-entropy loss")
     plt.xlabel("Epoch")
     plt.legend(loc="upper left")
 
     plt.show()
+    """
+    return best_val_loss
 
-## main
+## Tune hyperparameters with grid search
 
-model = Seq2SeqLSTM(input_size, output_size, embed_size, hidden_size).to(device)
+def grid_search(emb_size, hid_size, lr, nep, bs):
 
-train(model)
+    hyperparams = {
+        'embed_size': emb_size,
+        'hidden_size': hid_size,
+        'learning_rate': lr,
+        'n_epochs': nep,
+        'batch_size': bs
+    }
+    best_val_loss = float('inf')
+    best_hyperparams = None
+
+    for embed_size in hyperparams['embed_size']:
+        for hidden_size in hyperparams['hidden_size']:
+            for learning_rate in hyperparams['learning_rate']:
+                for n_epochs in hyperparams['n_epochs']:
+                    for batch_size in hyperparams['batch_size']:
+        
+                        model = Seq2SeqLSTM(input_size, output_size, embed_size, hidden_size).to(device)
+                        val_loss = train(model, learning_rate, n_epochs, batch_size)
+                        
+                        if val_loss < best_val_loss:
+                            best_val_loss = val_loss
+                            best_hyperparams = {
+                                    'embed_size': embed_size,
+                                    'hidden_size': hidden_size,
+                                    'learning_rate': learning_rate,
+                                    'n_epochs': n_epochs,
+                                    'batch_size': batch_size,
+                                    'val_loss': val_loss
+                                }
+
+    print("Best Hyperparameters:", best_hyperparams)
+
+grid_search([64,128,256,512], [128,256,512,1024], [learning_rate], [n_epochs], [batch_size])
