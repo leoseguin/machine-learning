@@ -179,7 +179,7 @@ def train(mod, lr, nep, bs):
 
 ## Tune hyperparameters with grid search
 
-def grid_search(emb_size, hid_size, lr, nep, bs):
+def grid_search(emb_size=[embed_size], hid_size=[hidden_size], lr=[learning_rate], nep=[n_epochs], bs=[batch_size]):
 
     hyperparams = {
         'embed_size': emb_size,
@@ -188,29 +188,41 @@ def grid_search(emb_size, hid_size, lr, nep, bs):
         'n_epochs': nep,
         'batch_size': bs
     }
-    best_val_loss = float('inf')
-    best_hyperparams = None
+    val_losses = []
 
+    n_steps = len(emb_size) * len(hid_size) * len(lr) * len(nep) * len(bs)
+    n_step = 0
     for embed_size in hyperparams['embed_size']:
         for hidden_size in hyperparams['hidden_size']:
             for learning_rate in hyperparams['learning_rate']:
                 for n_epochs in hyperparams['n_epochs']:
                     for batch_size in hyperparams['batch_size']:
-        
+                        n_step += 1
+                        print(f"\nStep {n_step}/{n_steps}")
+
                         model = Seq2SeqLSTM(input_size, output_size, embed_size, hidden_size).to(device)
                         val_loss = train(model, learning_rate, n_epochs, batch_size)
-                        
-                        if val_loss < best_val_loss:
-                            best_val_loss = val_loss
-                            best_hyperparams = {
-                                    'embed_size': embed_size,
-                                    'hidden_size': hidden_size,
-                                    'learning_rate': learning_rate,
-                                    'n_epochs': n_epochs,
-                                    'batch_size': batch_size,
-                                    'val_loss': val_loss
-                                }
+                        val_losses.append((embed_size, hidden_size, learning_rate, n_epochs, batch_size, val_loss))
 
-    print("Best Hyperparameters:", best_hyperparams)
+    return val_losses
 
-grid_search([64,128,256,512], [128,256,512,1024], [learning_rate], [n_epochs], [batch_size])
+## Explore relationships between hyperparameters
+
+learning_rates = [0.0001,0.001,0.01,0.1]
+batch_sizes = [16,32,64,128,256]
+
+val_losses = grid_search(bs=batch_sizes, lr=learning_rates)
+losses = [[val_loss for emb, hid, lr, nep, bs, val_loss in val_losses if lr == learning_rate] for learning_rate in learning_rates]
+
+plt.figure(figsize=(8, 6))
+plt.imshow(losses, cmap='viridis', interpolation='nearest')
+plt.colorbar()
+
+plt.xlabel('Learning rate')
+plt.ylabel('Batch size')
+plt.title('Validation loss heatmap')
+
+plt.xticks(ticks=range(len(learning_rates)), labels=[str(lr) for lr in learning_rates])
+plt.yticks(ticks=range(len(batch_sizes)), labels=[str(bs) for bs in batch_sizes])
+
+plt.show()
