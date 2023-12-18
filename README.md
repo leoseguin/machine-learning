@@ -24,7 +24,7 @@ The data used in the project is taken from the public *Europarl* dataset. It is 
 In this project, we focus only on the French and English transcriptions. 
 They are stored in two parallel datasets, `europarl-v7.fr-en.fr` and `europarl-v7.fr-en.en`. They contain the same **2,007,723 sentences**, respectively in their French and English versions. The French dataset contains 51,388,643 words (of which 141,642 are distinct), while the English datasets contains 50,196,035 of them (of which 105,357 are distinct).
 
-We follow different steps in order to prepare the data for a more efficient learning, notably: splitting the file into sentences, tokenizing text by white space, normalizing case to lowercase, removing punctuation from each word, removing non-printable characters, converting French characters to Latin characters, removing words that contain non-alphabetic characters, and reducing vocabulary (most infrequent words are replaced by "unk" in the final dataset). 
+We follow different steps in order to prepare the data for a more efficient learning, notably: splitting the file into sentences, normalizing case to lowercase, removing punctuation from each word, removing non-printable characters, converting French characters to Latin characters, removing words that contain non-alphabetic characters, and reducing vocabulary (most infrequent words are replaced by "unk" in the final dataset). 
 The prepared data is stored in the two parallel datasets `french_prepared.pkl` and `english_prepared.pkl`. They still contain the same 2,007,723 sentences; however, only **32,871 distinct French words** and **23,340 distinct English words** are kept.
 
 The program [`load_dataset.py`](load_dataset.py) downloads the dataset from the web, applies the cleaning steps mentioned above, and saves the resulting files in the `dataset` folder.
@@ -94,6 +94,3 @@ Training the model with those values gives a **training loss of 5.8331** and a *
 ![Graph of training and validation loss](graphs/hid_size-embed_size.png)
 
 The final trained model is then saved in the current folder under the name `translation_model.pt`.
-
-## TODO :
-1. try some translation usages (compare with Google Translate and/or DeepL)

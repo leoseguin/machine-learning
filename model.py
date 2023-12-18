@@ -10,6 +10,12 @@ import random
 import time
 import matplotlib.pyplot as plt
 
+import re
+import string
+from unicodedata import normalize
+
+import spacy
+
 directory = "dataset"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -227,13 +233,98 @@ plt.yticks(ticks=range(len(batch_sizes)), labels=[str(bs) for bs in batch_sizes]
 
 plt.show()
 """
-## Test and save model once hyperparameters are set
-        
+## Use model
+
+def preprocess(sentence):
+	# prepare regex for char filtering
+    re_print = re.compile('[^%s]' % re.escape(string.printable))
+	# prepare translation table for removing punctuation
+    table = str.maketrans('', '', string.punctuation)
+    # normalize unicode characters
+    line = normalize('NFD', sentence).encode('ascii', 'ignore')
+    line = line.decode('UTF-8')
+    # tokenize on white space
+    line = line.split()
+    # convert to lower case
+    line = [word.lower() for word in line]
+    # remove punctuation from each token
+    line = [word.translate(table) for word in line]
+    # remove non-printable chars form each token
+    line = [re_print.sub('', w) for w in line]
+    # remove tokens with numbers in them
+    line = [word for word in line if word.isalpha()]
+    # store as string
+    sentence = ' '.join(line)
+
+    # tokenize sentence
+    fr = spacy.load("fr_core_news_sm")
+    sentence = [token.text for token in fr.tokenizer(sentence)]
+    max_len = 27
+    if len(sentence) > max_len:
+        raise ValueError(f"Sentence length must be at most {max_len}")
+    else:
+        # numericalize sentence
+        num_sequence = [2]  # start-of-sentence
+        for token in sentence:
+            try:
+                num_sequence.append(french_vocab[token])
+            except KeyError:    # word not in vocab
+                num_sequence.append(french_vocab['unk'])
+        num_sequence.append(3)   # end-of-sentence
+        # add padding
+        num_sequence += [0] * (max_len - len(num_sequence))
+
+    return num_sequence
+
+def postprocess(num_sequence, invert_voc):
+    # "decode" sequence
+    dec_sentence = ""
+    for num in num_sequence.tolist():
+        try:
+            dec_sentence += invert_voc[round(num)] + " "
+        except KeyError:    # word not in vocab
+            dec_sentence += 'unk' + " "
+
+    dec_sentence = dec_sentence.strip()
+    return dec_sentence
+
+def translate_sentence(model, input_sentence, target_sentence, invert_voc):
+    input_sentence, target_sentence = preprocess(input_sentence), preprocess(target_sentence)
+    input_sentence, target_sentence = torch.tensor([input_sentence], dtype=torch.long, device=device), torch.tensor([target_sentence], dtype=torch.long, device=device)
+
+    # inference
+    model.train(False)
+    with torch.no_grad():
+        predicted_sentence = model(input_sentence.transpose(0,1), target_sentence.transpose(0,1), tfr=0)  # no tfr for inference
+        predicted_sentence = postprocess(predicted_sentence[1:].squeeze(1).argmax(1), invert_voc)
+
+    return predicted_sentence
+
+## main
+
 model = Seq2SeqLSTM(input_size, output_size, embed_size, hidden_size).to(device)
-train(model, learning_rate, n_epochs, batch_size)
 
-test_loader = DataLoader(test_dataset, batch_size=batch_size)
-test_loss = evaluate(model, test_loader)
-print(f"\nTest Loss: {test_loss:.4f}")
+filename = "translation_model.pt"
+if not(os.path.exists(filename)):      # train, test and save model
+    train(model, learning_rate, n_epochs, batch_size)
 
-torch.save(model.state_dict(), 'translation_model.pt')
+    test_loader = DataLoader(test_dataset, batch_size=batch_size)
+    test_loss = evaluate(model, test_loader)
+    print(f"\nTest Loss: {test_loss:.4f}")
+
+    torch.save(model.state_dict(), filename)
+
+else:   # use model for inference
+    model.load_state_dict(torch.load(filename,map_location=device))
+    invert_english_vocab = {value: key for key, value in english_vocab.items()}
+
+    while True:
+        input_sentence = input("\nInput sentence (FR): ")
+        target_sentence = input("Target sentence (EN): ")
+
+        predicted_sentence = translate_sentence(model, input_sentence, target_sentence, invert_english_vocab)
+        print("Predicted sentence: ", predicted_sentence)
+
+        choice = input("\nEnter 'y' to continue\n")
+        if choice.lower() != 'y':
+            break
