@@ -50,11 +50,11 @@ test_sequences = (torch.tensor(french_sequences[train_size + val_size:], dtype=t
 ## Define training parameters and Dataloaders
 
 # hyperparameters to adjust
-embed_size = 256
-hidden_size = 512
-learning_rate = 0.001
-n_epochs = 20
-batch_size = 64
+embed_size = 512
+hidden_size = 1024
+learning_rate = 0.0001
+n_epochs = 10
+batch_size = 128
 
 # custom datasets
 train_dataset = TensorDataset(train_sequences[0], train_sequences[1])
@@ -163,7 +163,7 @@ def train(mod, lr, nep, bs):
 
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-    """
+    
     plt.figure(1, figsize=(10,5))
 
     plt.plot(list(range(1, nep+1)), train_losses, 'r', label="train")
@@ -174,7 +174,7 @@ def train(mod, lr, nep, bs):
     plt.legend(loc="upper left")
 
     plt.show()
-    """
+    
     return best_val_loss
 
 ## Tune hyperparameters with grid search
@@ -205,7 +205,7 @@ def grid_search(emb_size=[embed_size], hid_size=[hidden_size], lr=[learning_rate
                         val_losses.append((embed_size, hidden_size, learning_rate, n_epochs, batch_size, val_loss))
 
     return val_losses
-
+"""
 ## Explore relationships between hyperparameters
 
 learning_rates = [0.0001,0.001,0.01,0.1]
@@ -226,3 +226,14 @@ plt.xticks(ticks=range(len(learning_rates)), labels=[str(lr) for lr in learning_
 plt.yticks(ticks=range(len(batch_sizes)), labels=[str(bs) for bs in batch_sizes])
 
 plt.show()
+"""
+## Test and save model once hyperparameters are set
+        
+model = Seq2SeqLSTM(input_size, output_size, embed_size, hidden_size).to(device)
+train(model, learning_rate, n_epochs, batch_size)
+
+test_loader = DataLoader(test_dataset, batch_size=batch_size)
+test_loss = evaluate(model, test_loader)
+print(f"\nTest Loss: {test_loss:.4f}")
+
+torch.save(model.state_dict(), 'translation_model.pt')

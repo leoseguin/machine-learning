@@ -72,9 +72,28 @@ The program [`model.py`](model.py) creates the model and trains it on the data c
 
 ## Hyperparameters optimisation
 
-wip
+Our model counts 5 different hyperparameters: the dimension of the embedding (`embed_size`), the dimension of the LSTM hidden state (`hidden_size`), the learning rate (`learning_rate`), the number of epochs (`n_epochs`) and the batch size (`batch_size`).
+We try different methods to select the best values for our hyperparameters:
+- After training, we plot the graph of validation loss and training loss versus number of epochs. It can be useful to choose an adequat number of epochs, and it allowed us to notice overfitting (validation loss increasing while the training loss decreases) happens really early in the training, which led us to set the number of epochs to only 10:
+![Graph of training and validation loss versus number of epochs (100 epochs)](graphs/overfitting.png)
+- By setting 4 of the 5 hyperparameters values and making the fifth one vary, we can determine the best value for the parameter independently of the others, by selecting the one that led to the best validation loss.
+- By setting 3 of the hyperparameters, we can try different values for the two others in order to understand possible interactions between them and the best values given the situation. For that purpose, we create heatmaps like follows: 
+![Graph of batch_size versus learning_rate](graphs/batch_size-learning_rate.png)
+![Graph of hid_size versus embed_size](graphs/hid_size-embed_size.png)
+
+With all those considerations, the final chosen hyperparameters values are the following: 
+```
+embed_size = 512
+hidden_size = 1024
+learning_rate = 0.0001
+n_epochs = 10
+batch_size = 128
+```
+
+Training the model with those values gives a **training loss of 5.8331** and a **validation loss of 6.0339**, along with a **test loss of 5.9975**.
+![Graph of training and validation loss](graphs/hid_size-embed_size.png)
+
+The final trained model is then saved in the current folder under the name `translation_model.pt`.
 
 ## TODO :
-1. try and optimise hyperparameters
-2. save the model when ready and compute loss on test set
-3. try some translation usages (compare with Google Translate and/or DeepL)
+1. try some translation usages (compare with Google Translate and/or DeepL)

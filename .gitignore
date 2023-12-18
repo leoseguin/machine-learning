@@ -10,3 +10,4 @@ dataset/english_prepared.pkl
 dataset/french_prepared.pkl
 dataset/english_num.pkl
 dataset/french_num.pkl
+model.pt
